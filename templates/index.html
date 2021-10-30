@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>母猪行为监测平台</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../static/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../static/css/bootstrap-responsive.min.css" />
+    <link rel="stylesheet" href="../static/css/fullcalendar.css" />
+    <link rel="stylesheet" href="../static/css/matrix-style.css" />
+    <link rel="stylesheet" href="../static/css/matrix-media.css" />
+    <link href="../static/font-awesome/css/font-awesome.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../static/css/jquery.gritter.css" />
+    <link href='http://fonts.useso.com/css?family=Open+Sans:400,700,800' rel='stylesheet' type='text/css'>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/4.2.1-rc1/echarts-en.js"></script>
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <script src="../static/js/excanvas.min.js"></script>
+    <script src="../static/js/jquery.min.js"></script>
+    <script src="../static/js/jquery.ui.custom.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/jquery.flot.min.js"></script>
+    <script src="../static/js/jquery.flot.resize.min.js"></script>
+    <script src="../static/js/jquery.peity.min.js"></script>
+    <script src="../static/js/fullcalendar.min.js"></script>
+    <script src="../static/js/matrix.js"></script>
+    <script src="../static/js/matrix.dashboard.js"></script>
+    <script src="../static/js/jquery.gritter.min.js"></script>
+    <script src="../static/js/matrix.interface.js"></script>
+    <script src="../static/js/matrix.chat.js"></script>
+    <script src="../static/js/jquery.validate.js"></script>
+    <script src="../static/js/matrix.form_validation.js"></script>
+    <script src="../static/js/jquery.wizard.js"></script>
+    <script src="../static/js/jquery.uniform.js"></script>
+    <script src="../static/js/select2.min.js"></script>
+    <script src="../static/js/matrix.popover.js"></script>
+    <script src="../static/js/jquery.dataTables.min.js"></script>
+    <script src="../static/js/matrix.tables.js"></script>
+
+</head>
+<body onload="time()">
+
+<!--头标题-->
+<div style="padding: 20px;color: white">
+  <h1>母猪行为监测平台</h1>
+</div>
+
+<!--侧边菜单-->
+<div id="sidebar"><a href="#" class="visible-phone"><i class="icon icon-home"></i> Dashboard</a>
+  <ul>
+    <li class="active"><a href="index.html"><i class="icon icon-home"></i> <span>实时行为数据流</span></a> </li>
+    <li> <a href="calendar.html"><i class="icon icon-file"></i> <span>日历</span></a></li>
+  </ul>
+</div>
+
+
+<!--主体-->
+<div id="content">
+    <div id="showtime" style="font-size: 30px;font-weight: bold;padding: 10px"></div>
+    <div class="widget-box">
+          <div class="widget-title">
+            <ul class="nav nav-tabs">
+              <li class="active"><a href="/index">母猪1号</a></li>
+              <li><a  href="/index2">母猪2号</a></li>
+            </ul>
+          </div>
+          <div class="widget-content tab-content">
+            <div id="tab1" class="tab-pane active">
+                <div class="container-fluid">
+                      <!--Chart-box-->
+                      <!--加速度-->
+                      <div class="widget-box">
+                        <div class="widget-title"><span class="icon"><i class="icon-signal"></i></span>
+                          <h5>加速度计数值</h5>
+                        </div>
+                        <div id="container_acc" style="height: 300px"></div>
+                      </div>
+                      <!--陀螺仪-->
+                      <div class="widget-box">
+                        <div class="widget-title"><span class="icon"><i class="icon-signal"></i></span>
+                          <h5>磁力计数值</h5>
+                        </div>
+                        <div id="container_b" style="height: 300px"></div>
+                      </div>
+                      <!--磁力计-->
+                      <div class="widget-box">
+                        <div class="widget-title"><span class="icon"><i class="icon-signal"></i></span>
+                          <h5>陀螺仪数值</h5>
+                        </div>
+                        <div id="container_gyro" style="height: 300px"></div>
+                      </div>
+                </div>
+            </div>
+          </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+    var dom = document.getElementById("container_acc");
+    var myChart = echarts.init(dom);
+    var app = {};
+    var option;
+
+    var acc_x = {{ data3 }};
+    var acc_y = {{ data4 }};
+    var acc_z = {{ data5 }};
+
+    //初始化x轴数据
+    var _x_axis = [];
+    for (var i = 1; i < 41; i++) {
+        _x_axis.push(i)
+    };
+
+    //初始化y轴数据
+    var ax = acc_x.slice(0,40);
+    var ay = acc_y.slice(0,40);
+    var az = acc_z.slice(0,40);
+
+    var j = 40;
+    function update() {
+        j = j + 1;
+        if (j > acc_x.length-1) {
+            j = 0;
+        }
+        var acc = new Array(acc_x[j],acc_y[j],acc_z[j]);
+        return acc
+    }
+
+    option = {
+      title: {
+      },
+      tooltip: {
+          trigger: 'axis'
+      },
+      legend: {
+        data: {{data1|tojson}},
+        x:'center'
+       },
+      xAxis: {
+        type: 'category',
+        splitLine: {
+          show: false
+        }
+      },
+      yAxis: {
+        type: 'value',
+        min: -1.2,
+        max: 1.2,
+      },
+      series: [
+        {
+          name: {{name1|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: ax
+        },
+          {
+          name: {{name2|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: ay
+        },
+          {
+          name: {{name3|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: az
+        }
+      ]
+    };
+    setInterval(function () {
+        var updata_result = new Array();
+        updata_result = update();
+        ax.shift();
+        ax.push(updata_result[0]);
+        ay.shift();
+        ay.push(updata_result[1]);
+        az.shift();
+        az.push(updata_result[2]);
+        myChart.setOption({
+            series: [
+              {
+                data: ax
+              },
+                {
+                data: ay
+              },
+                {
+                data: az
+              }
+            ]
+        });
+    },100);
+
+    myChart.setOption(option);
+
+
+</script>
+
+<script type="text/javascript">
+    var dom_b = document.getElementById("container_b");
+    var mychart_b = echarts.init(dom_b);
+    var app = {};
+
+    var option_b;
+
+    var b_x = {{ data6 }};
+    var b_y = {{ data7 }};
+    var b_z = {{ data8 }};
+
+    //初始化x轴数据
+    var _x_axis = [];
+    for (var i = 1; i < 41; i++) {
+        _x_axis.push(i)
+    };
+
+    //初始化y轴数据
+    var bx = b_x.slice(0,40);
+    var by = b_y.slice(0,40);
+    var bz = b_z.slice(0,40);
+
+    var j_b = 40;
+    function update_b() {
+        j_b = j_b + 1;
+        if (j_b > acc_x.length-1) {
+            j_b = 0;
+        }
+        var b = new Array(b_x[j_b],b_y[j_b],b_z[j_b]);
+        return b
+    }
+
+    option_b = {
+      title: {
+      },
+      tooltip: {
+          trigger: 'axis'
+      },
+      legend: {
+        data: {{data1|tojson}},
+        x:'center'
+       },
+      xAxis: {
+        type: 'category',
+        splitLine: {
+          show: false
+        }
+      },
+      yAxis: {
+        type: 'value',
+        min: -4.5,
+        max: 4.5,
+      },
+      series: [
+        {
+          name: {{name4|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: bx
+        },
+          {
+          name: {{name5|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: by
+        },
+          {
+          name: {{name6|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: bz
+        }
+      ]
+    };
+
+    setInterval(function () {
+        var updata_result_b = new Array();
+        updata_result_b = update_b();
+        bx.shift();
+        bx.push(updata_result_b[0]);
+        by.shift();
+        by.push(updata_result_b[1]);
+        bz.shift();
+        bz.push(updata_result_b[2]);
+        mychart_b2.setOption({
+            series: [
+                {
+                data: bx
+              },
+                {
+                data: by
+              },
+                {
+                data: bz
+              }
+            ]
+
+        });
+    },100);
+
+    mychart_b.setOption(option_b);
+
+</script>
+
+<script type="text/javascript">
+    var dom_g = document.getElementById("container_gyro");
+    var mychart_g = echarts.init(dom_g);
+    var app = {};
+
+    var option_g;
+
+    var g_x = {{ data9 }};
+    var g_y = {{ data10 }};
+    var g_z = {{ data11 }};
+
+    //初始化x轴数据
+    var _x_axis = [];
+    for (var i = 1; i < 41; i++) {
+        _x_axis.push(i)
+    };
+
+    //初始化y轴数据
+    var gx = g_x.slice(0,40);
+    var gy = g_y.slice(0,40);
+    var gz = g_z.slice(0,40);
+
+    var j_g = 40;
+    function update_g() {
+        j_g = j_g + 1;
+        if (j_g > acc_x.length-1) {
+            j_g = 0;
+        }
+        var g = new Array(g_x[j_g],g_y[j_g],g_z[j_g]);
+        return g
+    }
+
+    option_g = {
+      title: {
+      },
+      tooltip: {
+          trigger: 'axis'
+      },
+      legend: {
+        data: {{data1|tojson}},
+        x:'center'
+       },
+      xAxis: {
+        type: 'category',
+        splitLine: {
+          show: false
+        }
+      },
+      yAxis: {
+        type: 'value',
+        min: -4.5,
+        max: 4.5,
+      },
+      series: [
+        {
+          name: {{name7|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: gx
+        },
+          {
+          name: {{name8|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: gy
+        },
+          {
+          name: {{name9|tojson}},
+          type: 'line',
+          stack: 'Total',
+          data: gz
+        }
+      ]
+    };
+
+    setInterval(function () {
+        var updata_result_g = new Array();
+        updata_result_g = update_g();
+        gx.shift();
+        gx.push(updata_result_g[0]);
+        gy.shift();
+        gy.push(updata_result_g[1]);
+        gz.shift();
+        gz.push(updata_result_g[2]);
+        mychart_g.setOption({
+            series: [
+                {
+                data: gx
+              },
+                {
+                data: gy
+              },
+                {
+                data: gz
+              }
+            ]
+
+        });
+    },100);
+
+    mychart_g.setOption(option_g);
+
+</script>
+
+<script type="text/javascript">
+  // This function is called from the pop-up menus to transfer to
+  // a different page. Ignore if the value returned is a null string:
+  function goPage (newURL) {
+
+      // if url is empty, skip the menu dividers and reset the menu selection to default
+      if (newURL != "") {
+      
+          // if url is "-", it is this page -- reset the menu:
+          if (newURL == "-" ) {
+              resetMenu();            
+          } 
+          // else, send page to designated URL            
+          else {  
+            document.location.href = newURL;
+          }
+      }
+  }
+
+  function time() {
+        //获得显示时间的div
+        t_div = document.getElementById('showtime');
+        var now = new Date()
+            //替换div内容
+        t_div.innerHTML = "现在是" + now.getFullYear() + "年" + (now.getMonth() + 1) + "月" + now.getDate() + "日" + now.getHours() + "时" + now.getMinutes() + "分" + now.getSeconds() + "秒";
+        //等待一秒钟后调用time方法，由于settimeout在time方法内，所以可以无限调用
+        setTimeout(time, 1000);
+    }
+
+// resets the menu selection upon entry to this page:
+function resetMenu() {
+   document.gomenu.selector.selectedIndex = 2;
+}
+</script>
+</body>
+</html>
